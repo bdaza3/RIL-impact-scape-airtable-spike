@@ -1,5 +1,7 @@
 # RIL Impact Scape Airtable spike
 
+Vercel link: https://ril-impact-scape-airtable-spike.vercel.app/
+
 This spike evaluates the static architecture:
 
 `Airtable → Airtable API → build/data generation → Next.js → Vercel`
