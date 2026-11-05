@@ -38,6 +38,45 @@ const view = process.env.AIRTABLE_VIEW_ID_OR_NAME;
 const records = [];
 let offset;
 
+function extensionForContentType(contentType) {
+  return {
+    "image/gif": ".gif",
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/svg+xml": ".svg",
+    "image/webp": ".webp",
+  }[contentType?.split(";")[0].trim()];
+}
+
+async function downloadLogos(records) {
+  const logosDirectory = path.join(projectDirectory, "public", "organization-logos");
+  await mkdir(logosDirectory, { recursive: true });
+
+  for (const record of records) {
+    const attachments = record.fields?.["Logo de tu organización"];
+    if (!Array.isArray(attachments)) continue;
+
+    for (const attachment of attachments) {
+      if (!attachment || typeof attachment !== "object" || typeof attachment.url !== "string") continue;
+
+      const response = await fetch(attachment.url);
+      if (!response.ok) {
+        throw new Error(
+          `Could not download logo ${attachment.filename ?? attachment.id ?? "attachment"} for ${record.id}: HTTP ${response.status}`,
+        );
+      }
+
+      const extension =
+        extensionForContentType(response.headers.get("content-type")) ||
+        path.extname(attachment.filename ?? "").toLowerCase() ||
+        ".img";
+      const filename = `${record.id}-${attachment.id ?? "logo"}${extension}`;
+      await writeFile(path.join(logosDirectory, filename), Buffer.from(await response.arrayBuffer()));
+      attachment.url = `/organization-logos/${filename}`;
+    }
+  }
+}
+
 try {
   do {
     const url = new URL(
@@ -60,6 +99,7 @@ try {
     offset = page.offset;
   } while (offset);
 
+  await downloadLogos(records);
   const outputPath = path.join(repositoryDirectory, "data", "organizations.json");
   await mkdir(path.dirname(outputPath), { recursive: true });
   await writeFile(outputPath, `${JSON.stringify(records, null, 2)}\n`, "utf8");

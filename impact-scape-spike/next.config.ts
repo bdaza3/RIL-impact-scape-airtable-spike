@@ -1,13 +1,16 @@
 import type { NextConfig } from "next";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const repositoryDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  output: "export",
   experimental: {
     agentFeedback: true,
   },
-  cacheComponents: true,
-  partialPrefetching: true,
   turbopack: {
+    root: repositoryDirectory,
     rules: {
       "*.css": {
         loaders: ["@tailwindcss/turbopack"],
