@@ -70,16 +70,27 @@ the project environment, and use the default `npm run build` command.
 
 ## Rebuild/update findings
 
-The fetch-and-build process was tested successfully: running `npm run build`
-retrieves the current Airtable view before producing the static site. An
-Airtable record change can therefore appear after another build or redeploy.
-This spike did not implement or test an automatic Airtable-to-Vercel trigger.
-The current setup has no verified free direct trigger, so production would need
-an approved Airtable automation, webhook, scheduled rebuild, or equivalent
-integration. GitHub Actions polling, hash detection, webhooks, and other
-automation are intentionally out of scope here.
+Currently, an Airtable change is **not updated automatically** on the website.
+Someone must run a new Vercel build or redeploy. The build fetches the latest
+Airtable records before creating the site.
+
+Simple low-cost ways to automate this are:
+
+1. **Airtable Automation → Vercel Deploy Hook (recommended):** Airtable calls
+   Vercel whenever a record changes, and Vercel rebuilds the site.
+2. **Scheduled GitHub Action → Vercel Deploy Hook:** GitHub asks Vercel to
+   rebuild on a schedule, such as every hour. This is not immediate, but is
+   usually free for a public repository.
+3. **Scheduled cron service → Vercel Deploy Hook:** A free scheduled service
+   calls Vercel periodically, similar to the GitHub option.
+
+The existing build script already fetches fresh Airtable data, so these options
+only need to trigger a new Vercel build. The first option is best if the
+Airtable plan supports outbound automations. If not, the scheduled GitHub
+option is the simplest fallback. This spike did not configure or test any of
+these automatic triggers.
 
 Known limitations: this prototype uses the latest committed/generated JSON and
-does not refresh itself when Airtable changes. Regenerate the JSON when Airtable
-changes so the local logo assets stay current. The page currently has no search
-box.
+does not refresh itself when Airtable changes unless a new build is triggered.
+Regenerate the JSON when Airtable changes so the local logo assets stay current.
+The page currently has no search box.
